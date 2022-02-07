@@ -113,7 +113,7 @@ Deploy the infrastructure required for this workshop by clicking the button belo
 <tr>
 <td width="60%">Download the example data from <a href="https://github.com/davedoesdemos/DataLineage/blob/main/assets/data.csv">this link</a> and then browse for that file to upload. You now have a file in your source container with three lines of CSV data. It's a very simple file just for demo purposes.<br />
 <br />
-Column1, column2, column3<br />
+"Column1","column2","column3"<br />
 1, 2, 3<br />
 2, 1, 4<br />
 5, 23, 1<br />
@@ -208,8 +208,79 @@ Change this to reflect your storage account name, pipeline name, and copy task n
 <td width="60%">Go to your sink1 container and check the file. Notice that your JSON has been escaped by the process so that double quotes have a forward slash character next to them. Commas are within quotes and so need no further escaping.The source data is otherwise untouched.</td>
 <td width="40%"><img src="images/29.output1.png" /></td>
 </tr>
+<tr>
+<td width="60%">Next we're going to create another pipeline which consumes this output. I decided to do this as a separate pipeline for clarity but as usual you may do this differently in your production systems I've used data flows here which is Spark based, but you could just as easily do this with code in any Spark engine like Databricks, or any other tool you're using. In the authoring pane of data factory add two new data sets. The first is sourceDataset2 and points to the sink1 container and the data.csv file created in the last step. This time, read the header row from connection/source which will give us a schema.</td>
+<td width="40%"><img src="images/30.sourceDataset2.png" /></td>
+</tr>
+<tr>
+<td width="60%">For the second dataset we're going to choose Parquet as the format since it's binary and is very common in data lake applications. It can also be read by Power BI so your end users could use it to read this data in to a report.</td>
+<td width="40%"><img src="images/31.chooseParquet.png" /></td>
+</tr>
+<tr>
+<td width="60%">Call this sinkDataset2 and select none for the schema. Store it in your sink2 container but do not give it a file name.</td>
+<td width="40%"><img src="images/32.sinkDataset2.png" /></td>
+</tr>
+<tr>
+<td width="60%">Next, click add and choose to create a data flow.</td>
+<td width="40%"><img src="images/33.createDataFlow.png" /></td>
+</tr>
+<tr>
+<td width="60%">Click to add a source to the data flow.</td>
+<td width="40%"><img src="images/34.addSource.png" /></td>
+</tr>
+<tr>
+<td width="60%">Choose your sourceDataset2</td>
+<td width="40%"><img src="images/35.sourceOptions.png" /></td>
+</tr>
+<tr>
+<td width="60%">Now click the plus next to your source task and add a Derived Column task. This will create a column based on the existing lineage column and add our new information. In other tools you may just concatenate the existing column.</td>
+<td width="40%"><img src="images/36.newDerivedColumn.png" /></td>
+</tr>
+<tr>
+<td width="60%">Add a column called lineage. Using the same name is fine here since data flows can refer to either one based on the stream it came from. In our example we won't need both so will just refer to the output from this derived column task. Click the expression builder link under the expression box (you'll need to click the box to see this link)</td>
+<td width="40%"><img src="images/37.addColumn.png" /></td>
+</tr>
+<tr>
+<td width="60%">In the expression builder we'll be adding a line to the JSON array:<br />
+<code>[{"dataSource": "sah23d4wy5nvpdk/sink1", "pipeline": "pipeline2", "task": "Data Flow1"}]</code><br />
+We do this by concatenating a newline and the text, and also escaping the text as JSON. What you do here will depend on your own data and use case.<br />
+<code>concat(concat(lineage, "\n"), escape('[{"dataSource": "sah23d4wy5nvpdk/sink1", "pipeline": "pipeline2", "task": "Data Flow1"}]','json'))</code></td>
+<td width="40%"><img src="images/38.expressionBuilder.png" /></td>
+</tr>
+<tr>
+<td width="60%">Now click the plus on derived column and add a sink task.</td>
+<td width="40%"><img src="images/39.addSink.png" /></td>
+</tr>
+<tr>
+<td width="60%">Choose your sinkdataset2 to write out the data. The incoming stream must be derivedColumn1, if it's the source dataset you will not get the additional data in the lineage column.</td>
+<td width="40%"><img src="images/40.sinkSettings.png" /></td>
+</tr>
+<tr>
+<td width="60%">On the mapping tab you'll see the mappings coming from the derived column task.</td>
+<td width="40%"><img src="images/41.mapping.png" /></td>
+</tr>
+<tr>
+<td width="60%">Now create a new pipeline in the authoring pane of data factory and add in a data flow task to run your data flow.</td>
+<td width="40%"><img src="images/42.addDataFlowTask.png" /></td>
+</tr>
+<tr>
+<td width="60%">Select the data flow you created.</td>
+<td width="40%"><img src="images/43.dataFlowSettings.png" /></td>
+</tr>
+<tr>
+<td width="60%">Click to publish your changes including the new pipeline and data flow.</td>
+<td width="40%"><img src="images/44.publishAll.png" /></td>
+</tr>
+<tr>
+<td width="60%">Once the publish is complete trigger the new pipeline and wait for it to complete.</td>
+<td width="40%"><img src="images/45.triggerNow.png" /></td>
+</tr>
+<tr>
+<td width="60%">Once complete you will see a new Parquet file in your sink2 container.</td>
+<td width="40%"><img src="images/46.parquetFile.png" /></td>
+</tr>
+<tr>
+<td width="60%">If you open this file in Power BI you'll see the lineage column as JSON data so that end users can see how the data has been processed at every step.</td>
+<td width="40%"><img src="images/47.dataInPowerBI.png" /></td>
+</tr>
 </table>
-
-
-
-
