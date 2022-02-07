@@ -68,6 +68,44 @@ pipelineVersion: if you have good versioning this can be useful but is not essen
     ]
 ```
 
+You could get as complex as you like with this technique and write code snippets or individual actions into the JSON. You can also add arrays into the JSON for more complex requirements:
+
+```JSON
+[
+    {
+        "processingDate": "07/02/2022",
+        "pipeline": "SAPRawIngest",
+        "pipelineRunID": "1216350a-1131-45ab-b09a-e8b487227059",
+        "dataSource": "sah23d4wy5nvpdk/sink1/SAP.csv",
+        "dataSink": "sah44d2wy3nvped/Raw/SAP/2022/02/07",
+        "task": "Data Copy1",
+        "actions": []
+    },
+    {
+        "processingDate": "07/02/2022",
+        "pipeline": "SAPRawIngest",
+        "pipelineRunID": "dfd94676-5933-42fe-b997-7acbc4bf7e87",
+        "dataSource": "sah44d2wy3nvped/Raw/SAP/2022/02/07",
+        "dataSink": "SynapseUK887",
+        "task": "Data Processing1",
+        "actions": [
+            {
+                "column": "customer.customerID",
+                "changes": "deduplicated with master data table"
+            },
+            {
+                "column": "customer.customerName",
+                "changes": "standardised Format"
+            },
+            {
+                "column": "stock.SKU",
+                "changes": "merged with Manhatten data"
+            }
+        ]
+    }
+]
+```
+
 ## Infrastructure
 
 For this demo we will be using Azure Data Factory and a storage account. 
